@@ -64,11 +64,9 @@ from omero.gateway.model import TagAnnotationData
 # OMERO Server details
 HOST = "outreach.openmicroscopy.org"
 PORT = 4064
-group_id = 5
 #  parameters to edit
 USERNAME = "username"
 PASSWORD = "password"
-
 # We want to process Images within this Dataset....
 dataset_id = 974
 # ...that are Tagged with this Tag
@@ -87,8 +85,7 @@ def connect_to_omero():
     gateway = Gateway(simpleLogger)
     
     user = gateway.connect(credentials)
-    print user.getGroupId()
-    return gateway
+    return gateway, user
 
 #Convert omero Image object as ImageJ ImagePlus object (An alternative to OmeroReader)
 def openOmeroImage(ctx, image_id):
@@ -169,8 +166,8 @@ def saveROIsToOmero(ctx, image_id, imp):
     return result
     
 # Prototype analysis example
-gateway = connect_to_omero()
-ctx = SecurityContext(group_id)
+gateway, user = connect_to_omero()
+ctx = SecurityContext(user.getGroupId())
 exp = gateway.getLoggedInUser()
 exp_id = exp.getId()
 
