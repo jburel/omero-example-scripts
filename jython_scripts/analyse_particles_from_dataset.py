@@ -188,4 +188,9 @@ for id1 in ids:
     rm = RoiManager.getInstance()
     rm.runCommand(imp, "Measure")
     save_rois_to_omero(ctx, id1, imp)
+    # Close the various components
+    IJ.selectWindow("Results")
+    IJ.run("Close")
+    IJ.selectWindow("ROI Manager")
+    IJ.run("Close")
     imp.close()
