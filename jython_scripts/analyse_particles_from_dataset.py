@@ -1,4 +1,3 @@
-
 import os
 import math
 import string
@@ -70,7 +69,7 @@ PASSWORD = "password"
 # We want to process Images within this Dataset....
 dataset_id = 974
 # ...that are Tagged with this Tag
-tag_text = "Control"
+tag_text = "Mitosis"
 
 # Connection method: returns a gateway object
 def connect_to_omero():
@@ -87,8 +86,8 @@ def connect_to_omero():
     user = gateway.connect(credentials)
     return gateway, user
 
-#Convert omero Image object as ImageJ ImagePlus object (An alternative to OmeroReader)
-def openOmeroImage(ctx, image_id):
+# Convert omero Image object as ImageJ ImagePlus object (An alternative to OmeroReader)
+def open_omero_image(ctx, image_id):
     browse = gateway.getFacility(BrowseFacility)
     print image_id
     image = browse.getImage(ctx, long(image_id))
@@ -139,14 +138,13 @@ def openOmeroImage(ctx, image_id):
     imp.show()
     return imp
 
-def listImagesInDataset(ctx, datset_id):
+def list_images_in_dataset(ctx, datset_id):
     browse = gateway.getFacility(BrowseFacility)
     ids = ArrayList(1)
     ids.add(Long(dataset_id))
-    images = browse.getImagesForDatasets(ctx, ids)
-    return images
+    return browse.getImagesForDatasets(ctx, ids)
 
-def filterImagesByTag(ctx, images, tag_value):
+def filter_images_by_tag(ctx, images, tag_value):
     metadata_facility = gateway.getFacility(MetadataFacility)
     tagged_image_ids = []
     for image in images:
@@ -157,13 +155,12 @@ def filterImagesByTag(ctx, images, tag_value):
                     tagged_image_ids.append(image.getId())
     return tagged_image_ids
                 
-def saveROIsToOmero(ctx, image_id, imp):
-    #Save ROI's back to OMERO
+def save_rois_to_omero(ctx, image_id, imp):
+    # Save ROI's back to OMERO
     reader = ROIReader()
     roi_list = reader.readImageJROIFromSources(image_id, imp)
     roi_facility = gateway.getFacility(ROIFacility)
-    result = roi_facility.saveROIs(ctx, image_id, exp_id, roi_list)
-    return result
+    return roi_facility.saveROIs(ctx, image_id, exp_id, roi_list)
     
 # Prototype analysis example
 gateway, user = connect_to_omero()
@@ -171,24 +168,24 @@ ctx = SecurityContext(user.getGroupId())
 exp = gateway.getLoggedInUser()
 exp_id = exp.getId()
 
-# Input ids in a comma seperated fashion
-IJ.run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display redirect=None decimal=3");
+images = list_images_in_dataset(ctx, dataset_id)
+print "Number of images in Dataset", len(images)
 
-images = listImagesInDataset(ctx, dataset_id)
-print "Images in Dataset", len(images)
-
-ids = filterImagesByTag(ctx, images, tag_text)
+ids = filter_images_by_tag(ctx, images, tag_text)
 
 print "tagged_image_ids", ids
 
+# Input ids in a comma seperated fashion
+IJ.run("Set Measurements...", "area mean standard modal min centroid center perimeter bounding fit shape feret's integrated median skewness kurtosis area_fraction stack display redirect=None decimal=3");
+
 for id1 in ids:
-    #if target_user ~= None:
+    # if target_user ~= None:
     # Switch context to target user and open omeroImage as ImagePlus object
-    imp = openOmeroImage(ctx, id1)
-    #Some analysis which creates ROI's and Results Table
+    imp = open_omero_image(ctx, id1)
+    # Some analysis which creates ROI's and Results Table
     IJ.setAutoThreshold(imp, "Default dark")
-    IJ.run(imp, "Analyze Particles...", "size=50-Infinity display clear add stack"); 
+    IJ.run(imp, "Analyze Particles...", "size=50-Infinity display clear add stack")
     rm = RoiManager.getInstance()
-    rm.runCommand(imp,"Measure");
-    saveROIsToOmero(ctx, id1, imp)
+    rm.runCommand(imp, "Measure")
+    save_rois_to_omero(ctx, id1, imp)
     imp.close()
