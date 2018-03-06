@@ -211,3 +211,5 @@ for id1 in ids:
     IJ.selectWindow("ROI Manager")
     IJ.run("Close")
     imp.close()
+
+print "processing done"
